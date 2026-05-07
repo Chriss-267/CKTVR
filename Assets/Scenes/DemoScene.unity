@@ -2592,6 +2592,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: horse
       objectReference: {fileID: 0}
+    - target: {fileID: -3282989343504972459, guid: f4d0e702aa66f8341a8c8d6934fd085d, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 260b6751e50a81d4681f85a588ce71e1, type: 2}
     - target: {fileID: 2774220344278030320, guid: f4d0e702aa66f8341a8c8d6934fd085d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.91517687
