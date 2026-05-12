@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.AI; // Necesario para el NavMesh
 
 public class IntroSequenceManager : MonoBehaviour
 {
@@ -10,48 +11,74 @@ public class IntroSequenceManager : MonoBehaviour
     public Animator doorAnimator;
     public Animator guideAnimator;
 
+    [Header("Movimiento (NavMesh)")]
+    public NavMeshAgent guideAgent;    // Arrastra aquí al Personaje Guía
+    public Transform exitPoint;       // Crea un objeto vacío donde quieres que camine primero
+    public Transform player;          // Arrastra aquí a tu XR Origin / Player
+    public float stopDistance = 2.0f; // Distancia para dejar de seguir al jugador
+
     [Header("Audio (Opcional)")]
     public AudioSource backgroundMusic;
     public AudioSource welcomeVoice;
 
+    private bool hasReachedExit = false;
+    private bool sequenceStarted = false;
+
     void Start()
     {
-        // Configuramos el botón para que ejecute la función cuando se presione
         if (startButton != null)
-        {
             startButton.onClick.AddListener(OnStartButtonPressed);
-        }
 
-        // Si tienes una música de fondo, puedes activarla aquí
         if (backgroundMusic != null) backgroundMusic.Play();
-        
-        // Si tienes una voz de bienvenida, la activamos
         if (welcomeVoice != null) welcomeVoice.Play();
+        
+        // Inicialmente el agente está detenido
+        if (guideAgent != null) guideAgent.isStopped = true;
+    }
+
+    void Update()
+    {
+        if (!sequenceStarted || guideAgent == null) return;
+
+        // 1. Control de la animación según la velocidad
+        bool isMoving = guideAgent.velocity.magnitude > 0.1f;
+        guideAnimator.SetBool("isWalking", isMoving);
+
+        // 2. Lógica de estados
+        if (!hasReachedExit)
+        {
+            // Verificamos si llegó al punto de salida
+            if (!guideAgent.pathPending && guideAgent.remainingDistance <= 0.5f)
+            {
+                hasReachedExit = true;
+                Debug.Log("Guía llegó a la salida. Ahora sigue al jugador.");
+            }
+        }
+        else
+        {
+            // Seguir al jugador constantemente
+            guideAgent.SetDestination(player.position);
+            guideAgent.stoppingDistance = stopDistance;
+        }
     }
 
     void OnStartButtonPressed()
     {
         Debug.Log("¡Secuencia Iniciada!");
+        sequenceStarted = true;
 
-        // 1. Abrimos la puerta usando el Trigger 'Open' que creamos
-        if (doorAnimator != null)
+        // Abrir puerta
+        if (doorAnimator != null) doorAnimator.SetTrigger("Open");
+
+        // Activar movimiento hacia la salida
+        if (guideAgent != null)
         {
-            doorAnimator.SetTrigger("Open");
+            guideAgent.isStopped = false;
+            guideAgent.SetDestination(exitPoint.position);
         }
 
-        // 2. Activamos el movimiento del guía usando el Trigger 'Exit'
-        if (guideAnimator != null)
-        {
-            guideAnimator.SetTrigger("Exit");
-        }
-
-        // 3. Desactivamos el botón para que no se pueda pulsar dos veces
-        if (startButton != null)
-        {
-            startButton.gameObject.SetActive(false);
-        }
-
-        // 4. Detener la voz si seguía hablando
+        // Desactivar UI
+        if (startButton != null) startButton.gameObject.SetActive(false);
         if (welcomeVoice != null) welcomeVoice.Stop();
     }
 }
