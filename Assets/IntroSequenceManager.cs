@@ -68,7 +68,7 @@ public class IntroSequenceManager : MonoBehaviour
         sequenceStarted = true;
 
         // Abrir puerta
-        if (doorAnimator != null) doorAnimator.SetTrigger("Open");
+        if (doorAnimator != null) doorAnimator.SetBool("IsOpen", true);
 
         // Activar movimiento hacia la salida
         if (guideAgent != null)
